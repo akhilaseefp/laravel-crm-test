@@ -36,6 +36,12 @@
             }
         @endphp
 
+       @php
+            $logoRelativePath = core()->getConfigData('general.general.admin_logo.logo_image');
+            $logoFullPath = public_path('storage/' . $logoRelativePath);
+        @endphp
+
+
         <!-- lang supports inclusion -->
         <style type="text/css">
             * {
@@ -160,6 +166,12 @@
     </head>
 
     <body dir="{{ $locale }}">
+        @if ($logoRelativePath)
+            <img src="{{ $logoFullPath }}" 
+                style="position: fixed; top:50%; left:50%; transform: translate(-50%, -50%);
+                        width:200px; opacity:0.13; z-index: 0; pointer-events:none;">
+        @endif
+
         <div class="page">
             <!-- Header -->
             <div class="page-header">
@@ -366,6 +378,18 @@
                     </table>
                 </div>
 
+                @php
+                    // ✅ Recalculate totals using final item->price (offer or normal)
+                    $computedSubTotal = $quote->items->sum(fn($i) => ($i->price ?? 0) * ($i->quantity ?? 0));
+
+                    $computedTax        = (float) ($quote->tax_amount ?? 0);
+                    $computedDiscount   = (float) ($quote->discount_amount ?? 0);
+                    $computedAdjustment = (float) ($quote->adjustment_amount ?? 0);
+
+                    $computedGrandTotal = $computedSubTotal + $computedTax - $computedDiscount + $computedAdjustment;
+                @endphp
+
+
                <!-- Summary Table -->
                 <div class="summary">
                     <table class="{{ app()->getLocale   () }}">
@@ -373,7 +397,9 @@
                             <tr>
                                 <td>@lang('admin::app.quotes.index.pdf.sub-total')</td>
                                 <td>-</td>
-                                <td>{!! core()->formatBasePrice($quote->sub_total, true) !!}</td>
+                                <!-- <td>{!! core()->formatBasePrice($quote->sub_total, true) !!}</td> -->
+                                <td>{!! core()->formatBasePrice($computedSubTotal, true) !!}</td>
+
                             </tr>
         
                             <tr>
@@ -397,7 +423,9 @@
                             <tr>
                                 <td><strong>@lang('admin::app.quotes.index.pdf.grand-total')</strong></td>
                                 <td><strong>-</strong></td>
-                                <td><strong>{!! core()->formatBasePrice($quote->grand_total, true) !!}</strong></td>
+                                <!-- <td><strong>{!! core()->formatBasePrice($quote->grand_total, true) !!}</strong></td> -->
+                                <td><strong>{!! core()->formatBasePrice($computedGrandTotal, true) !!}</strong></td>
+
                             </tr>
                         </tbody>
                     </table>

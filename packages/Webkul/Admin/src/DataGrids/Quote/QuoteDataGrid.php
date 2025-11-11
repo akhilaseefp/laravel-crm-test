@@ -16,24 +16,49 @@ class QuoteDataGrid extends DataGrid
         $tablePrefix = DB::getTablePrefix();
 
         $queryBuilder = DB::table('quotes')
+            ->leftJoin('users', 'quotes.user_id', '=', 'users.id')
+            ->leftJoin('persons', 'quotes.person_id', '=', 'persons.id')
+            ->leftJoin('quote_items', 'quotes.id', '=', 'quote_items.quote_id')
+            ->leftJoin('products', 'quote_items.product_id', '=', 'products.id')
             ->addSelect(
                 'quotes.id',
                 'quotes.subject',
                 'quotes.expired_at',
-                'quotes.sub_total',
                 'quotes.discount_amount',
                 'quotes.tax_amount',
                 'quotes.adjustment_amount',
-                'quotes.grand_total',
                 'quotes.created_at',
                 'users.id as user_id',
                 'users.name as sales_person',
                 'persons.id as person_id',
                 'persons.name as person_name',
-                'quotes.expired_at as expired_quotes'
+                'quotes.expired_at as expired_quotes',
+                // ✅ calculated subtotal using offer_price if valid
+                DB::raw("
+                    SUM(
+                        CASE
+                            WHEN products.offer_price IS NOT NULL
+                            AND products.offer_price < products.price
+                            AND products.offer_price > 0
+                            THEN products.offer_price * quote_items.quantity
+                            ELSE quote_items.price * quote_items.quantity
+                        END
+                    ) as calculated_sub_total
+                "),
+                // ✅ calculated grand total
+                DB::raw("
+                    SUM(
+                        CASE
+                            WHEN products.offer_price IS NOT NULL
+                            AND products.offer_price < products.price
+                            AND products.offer_price > 0
+                            THEN products.offer_price * quote_items.quantity
+                            ELSE quote_items.price * quote_items.quantity
+                        END
+                    ) + COALESCE(quotes.tax_amount,0) - COALESCE(quotes.discount_amount,0) + COALESCE(quotes.adjustment_amount,0)
+                as calculated_grand_total")
             )
-            ->leftJoin('users', 'quotes.user_id', '=', 'users.id')
-            ->leftJoin('persons', 'quotes.person_id', '=', 'persons.id');
+            ->groupBy('quotes.id');
 
         if ($userIds = bouncer()->getAuthorizedUserIds()) {
             $queryBuilder->whereIn('quotes.user_id', $userIds);
@@ -45,12 +70,6 @@ class QuoteDataGrid extends DataGrid
         $this->addFilter('person_name', 'persons.name');
         $this->addFilter('expired_at', 'quotes.expired_at');
         $this->addFilter('created_at', 'quotes.created_at');
-
-        if (request()->input('expired_quotes.in') == 1) {
-            $this->addFilter('expired_quotes', DB::raw('DATEDIFF(NOW(), '.$tablePrefix.'quotes.expired_at) >= '.$tablePrefix.'NOW()'));
-        } else {
-            $this->addFilter('expired_quotes', DB::raw('DATEDIFF(NOW(), '.$tablePrefix.'quotes.expired_at) < '.$tablePrefix.'NOW()'));
-        }
 
         return $queryBuilder;
     }
@@ -106,13 +125,14 @@ class QuoteDataGrid extends DataGrid
         ]);
 
         $this->addColumn([
-            'index'      => 'sub_total',
+            'index'      => 'calculated_sub_total',
             'label'      => trans('admin::app.quotes.index.datagrid.subtotal'),
             'type'       => 'string',
             'sortable'   => true,
-            'filterable' => true,
-            'closure'    => fn ($row) => core()->formatBasePrice($row->sub_total, 2),
+            'filterable' => false,
+            'closure'    => fn ($row) => core()->formatBasePrice($row->calculated_sub_total, 2),
         ]);
+
 
         $this->addColumn([
             'index'      => 'discount_amount',
@@ -142,13 +162,14 @@ class QuoteDataGrid extends DataGrid
         ]);
 
         $this->addColumn([
-            'index'      => 'grand_total',
+            'index'      => 'calculated_grand_total',
             'label'      => trans('admin::app.quotes.index.datagrid.grand-total'),
             'type'       => 'string',
             'sortable'   => true,
-            'filterable' => true,
-            'closure'    => fn ($row) => core()->formatBasePrice($row->grand_total, 2),
+            'filterable' => false,
+            'closure'    => fn ($row) => core()->formatBasePrice($row->calculated_grand_total, 2),
         ]);
+
 
         $this->addColumn([
             'index'      => 'expired_at',

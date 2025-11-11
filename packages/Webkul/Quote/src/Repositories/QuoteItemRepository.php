@@ -41,6 +41,14 @@ class QuoteItemRepository extends Repository
 
         $product = $this->productRepository->findOrFail($data['product_id']);
 
+        // ✅ OFFER PRICE LOGIC
+        $finalPrice = ($product->offer_price > 0 && $product->offer_price < $product->price)
+            ? $product->offer_price
+            : $product->price;
+
+        $data['price'] = $finalPrice;
+        $data['total'] = $finalPrice * $data['quantity'];
+
         $quoteItem = parent::create(array_merge($data, [
             'sku'  => $product->sku,
             'name' => $product->name,
@@ -58,6 +66,14 @@ class QuoteItemRepository extends Repository
     {
         $product = $this->productRepository->findOrFail($data['product_id']);
 
+        // ✅ OFFER PRICE LOGIC
+        $finalPrice = ($product->offer_price > 0 && $product->offer_price < $product->price)
+            ? $product->offer_price
+            : $product->price;
+
+        $data['price'] = $finalPrice;
+        $data['total'] = $finalPrice * $data['quantity'];
+
         $quoteItem = parent::update(array_merge($data, [
             'sku'  => $product->sku,
             'name' => $product->name,
@@ -66,3 +82,4 @@ class QuoteItemRepository extends Repository
         return $quoteItem;
     }
 }
+
