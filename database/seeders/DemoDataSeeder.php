@@ -4,8 +4,8 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Webkul\Product\Models\Product;
 use Illuminate\Support\Str;
+use Webkul\Product\Models\Product;
 
 class DemoDataSeeder extends Seeder
 {
@@ -18,12 +18,12 @@ class DemoDataSeeder extends Seeder
 
         for ($i = 0; $i < 20; $i++) {
             $price = mt_rand(500, 50000) / 1.0;
-            $offer_price = $price/2;
-            $qty   = mt_rand(5, 100);
+            $offer_price = $price / 2;
+            $qty = mt_rand(5, 100);
 
             $product = Product::create([
                 'sku'         => strtoupper(Str::random(8)),
-                'name'        => fake()->words(rand(2,4), true),
+                'name'        => fake()->words(rand(2, 4), true),
                 'description' => fake()->sentence(10),
                 'quantity'    => $qty,
                 'price'       => $price,
@@ -39,7 +39,6 @@ class DemoDataSeeder extends Seeder
                 'updated_at'            => now(),
             ]);
 
-
             $products[] = $product;
         }
 
@@ -49,8 +48,8 @@ class DemoDataSeeder extends Seeder
         $persons = [];
 
         for ($i = 0; $i < 25; $i++) {
-            $emails = [ fake()->unique()->safeEmail() ];
-            $numbers = [ fake()->numerify('9#########') ];
+            $emails = [fake()->unique()->safeEmail()];
+            $numbers = [fake()->numerify('9#########')];
 
             $id = DB::table('persons')->insertGetId([
                 'name'            => fake()->name(),
@@ -72,18 +71,18 @@ class DemoDataSeeder extends Seeder
             $value = mt_rand(10000, 200000) / 1.0;
 
             $id = DB::table('leads')->insertGetId([
-                'title'               => fake()->catchPhrase(),
-                'description'         => fake()->sentence(12),
-                'lead_value'          => $value,
-                'status'              => 1,  // open / active
-                'person_id'           => $persons[array_rand($persons)],
-                'lead_source_id'      => null,
-                'lead_type_id'        => null,
-                'lead_pipeline_id'    => null,
+                'title'                  => fake()->catchPhrase(),
+                'description'            => fake()->sentence(12),
+                'lead_value'             => $value,
+                'status'                 => 1,  // open / active
+                'person_id'              => $persons[array_rand($persons)],
+                'lead_source_id'         => null,
+                'lead_type_id'           => null,
+                'lead_pipeline_id'       => null,
                 'lead_pipeline_stage_id' => null,
-                'created_at'          => now(),
-                'updated_at'          => now(),
-                'expected_close_date' => fake()->date(),
+                'created_at'             => now(),
+                'updated_at'             => now(),
+                'expected_close_date'    => fake()->date(),
             ]);
 
             $leads[] = $id;
@@ -116,7 +115,7 @@ class DemoDataSeeder extends Seeder
             // ]);
 
             $quoteId = DB::table('quotes')->insertGetId([
-                'subject'          => 'Quote #' . strtoupper(Str::random(6)),
+                'subject'          => 'Quote #'.strtoupper(Str::random(6)),
                 'description'      => fake()->sentence(12),
 
                 // ✅ JSON addresses for constraint check
@@ -124,13 +123,13 @@ class DemoDataSeeder extends Seeder
                     'street' => fake()->streetAddress(),
                     'city'   => fake()->city(),
                     'state'  => fake()->state(),
-                    'zip'    => fake()->postcode()
+                    'zip'    => fake()->postcode(),
                 ]),
                 'shipping_address' => json_encode([
                     'street' => fake()->streetAddress(),
                     'city'   => fake()->city(),
                     'state'  => fake()->state(),
-                    'zip'    => fake()->postcode()
+                    'zip'    => fake()->postcode(),
                 ]),
 
                 'discount_percent' => 0,
@@ -145,8 +144,6 @@ class DemoDataSeeder extends Seeder
                 'created_at'       => now(),
                 'updated_at'       => now(),
             ]);
-
-
 
             $quotes[] = $quoteId;
 
@@ -179,11 +176,11 @@ class DemoDataSeeder extends Seeder
             $grand = $subtotal + $tax - $discount;
 
             DB::table('quotes')->where('id', $quoteId)->update([
-                'sub_total'    => $subtotal,
-                'tax_amount'   => $tax,
+                'sub_total'       => $subtotal,
+                'tax_amount'      => $tax,
                 'discount_amount' => $discount,
-                'grand_total'  => $grand,
-                'updated_at'   => now(),
+                'grand_total'     => $grand,
+                'updated_at'      => now(),
             ]);
         }
     }

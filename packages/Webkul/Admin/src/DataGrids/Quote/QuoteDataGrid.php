@@ -34,7 +34,7 @@ class QuoteDataGrid extends DataGrid
                 'persons.name as person_name',
                 'quotes.expired_at as expired_quotes',
                 // ✅ calculated subtotal using offer_price if valid
-                DB::raw("
+                DB::raw('
                     SUM(
                         CASE
                             WHEN products.offer_price IS NOT NULL
@@ -44,9 +44,9 @@ class QuoteDataGrid extends DataGrid
                             ELSE quote_items.price * quote_items.quantity
                         END
                     ) as calculated_sub_total
-                "),
+                '),
                 // ✅ calculated grand total
-                DB::raw("
+                DB::raw('
                     SUM(
                         CASE
                             WHEN products.offer_price IS NOT NULL
@@ -56,7 +56,7 @@ class QuoteDataGrid extends DataGrid
                             ELSE quote_items.price * quote_items.quantity
                         END
                     ) + COALESCE(quotes.tax_amount,0) - COALESCE(quotes.discount_amount,0) + COALESCE(quotes.adjustment_amount,0)
-                as calculated_grand_total")
+                as calculated_grand_total')
             )
             ->groupBy('quotes.id');
 
@@ -133,7 +133,6 @@ class QuoteDataGrid extends DataGrid
             'closure'    => fn ($row) => core()->formatBasePrice($row->calculated_sub_total, 2),
         ]);
 
-
         $this->addColumn([
             'index'      => 'discount_amount',
             'label'      => trans('admin::app.quotes.index.datagrid.discount'),
@@ -169,7 +168,6 @@ class QuoteDataGrid extends DataGrid
             'filterable' => false,
             'closure'    => fn ($row) => core()->formatBasePrice($row->calculated_grand_total, 2),
         ]);
-
 
         $this->addColumn([
             'index'      => 'expired_at',

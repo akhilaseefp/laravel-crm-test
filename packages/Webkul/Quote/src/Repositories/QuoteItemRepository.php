@@ -82,4 +82,3 @@ class QuoteItemRepository extends Repository
         return $quoteItem;
     }
 }
-
